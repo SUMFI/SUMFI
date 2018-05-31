@@ -43,7 +43,7 @@ def _run(alignment_method, iterative_method, output_dir, proteins_dir):
     elif alignment_method == 'smith_waterman':
         align = smith_waterman
     else:
-        raise NameError('Wrong alignment method')
+        raise ValueError('Wrong alignment method!')
 
     protein_combinations_path = os.path.join(output_dir, 'protein_combinations.csv')
     fasta_combinations = pd.read_csv(protein_combinations_path)
