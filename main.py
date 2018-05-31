@@ -5,6 +5,8 @@ import re
 import click
 import pandas as pd
 
+from aligner import smith_waterman, needleman_wunsch
+
 
 @click.group()
 def action():
@@ -12,10 +14,10 @@ def action():
 
 
 @action.command()
-@click.option('-p', '--proteins_dir', help='Path to folder with protein files', required=True)
 @click.option('-o', '--output_dir', help='Path to output folder', required=True)
-def prepare(proteins_dir, output_dir):
-    _prepare(proteins_dir, output_dir)
+@click.option('-p', '--proteins_dir', help='Path to folder with protein files', required=True)
+def prepare(output_dir, proteins_dir):
+    _prepare(output_dir, proteins_dir)
 
 
 def _prepare(proteins_dir, output_dir):
@@ -27,20 +29,34 @@ def _prepare(proteins_dir, output_dir):
 
 
 @action.command()
-def run():
-    _run()
+@click.option('-a', '--alignment_method', help='Alignment method: smith_waterman or needleman_wunsch', required=True)
+@click.option('-i', '--iterative_method', help='If true iterative method will be used', is_flag=True, required=False)
+@click.option('-o', '--output_dir', help='Path to output folder', required=True)
+def run(alignment_method, iterative_method, output_dir):
+    _run(alignment_method, iterative_method, output_dir)
 
 
-def _run():
-    pass
+def _run(alignment_method, iterative_method, output_dir):
+    if alignment_method == 'smith_waterman':
+        align = smith_waterman  # (iterative_method, output_dir)
+    elif alignment_method == 'needleman_wunsch':
+        align = needleman_wunsch  # (iterative_method, output_dir)
+    else:
+        return AssertionError
+
+    protein_combinations_path = os.path.join(output_dir, 'protein_combinations.csv')
+    fasta_combinations = pd.read_csv(protein_combinations_path)
+    fasta_combinations.apply(lambda x: align(x, iterative_method, output_dir), axis=1)
 
 
 @action.command()
-@click.option('-p', '--proteins_dir', help='Path to folder with protein files', required=True)
+@click.option('-a', '--alignment_method', help='Alignment method: smith_waterman or needleman_wunsch', required=True)
+@click.option('-i', '--iterative_method', help='If true iterative method will be used', is_flag=True, required=False)
 @click.option('-o', '--output_dir', help='Path to output folder', required=True)
-def prepare_run(proteins_dir_path):
-    _prepare(proteins_dir_path)
-    _run()
+@click.option('-p', '--proteins_dir', help='Path to folder with protein files', required=True)
+def prepare_run(alignment_method, iterative_method, output_dir, proteins_dir):
+    _prepare(output_dir, proteins_dir)
+    _run(alignment_method, iterative_method, output_dir)
 
 
 if __name__ == "__main__":
